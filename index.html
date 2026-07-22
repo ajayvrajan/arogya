@@ -144,8 +144,8 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://esm.sh/pdfjs-dist@4.4.168/buil
 const html = htm.bind(React.createElement);
 
 // ---- Live integration config (all public-safe values; never put a Stripe SECRET key here) ----
-const GOOGLE_CLIENT_ID = '';        // paste the OAuth Web Client ID ending in .apps.googleusercontent.com
-const STRIPE_PAYMENT_LINK = '';     // paste the Stripe ₹99 Payment Link, e.g. https://buy.stripe.com/xxxxxxxx
+const GOOGLE_CLIENT_ID = '1087731665818-0cjd9u6q3soi16c7g602gpnea6vhj9b0.apps.googleusercontent.com';
+const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/test_14A4gz4W0gN92LeeUj9bO04'; // TEST mode link — swap for the Live link before real launch
 
 // Parse an inline CSS string into a React style object so the design's
 // original inline styles can be carried over almost verbatim.
@@ -181,7 +181,6 @@ class App extends React.Component {
         history.replaceState({}, '', location.pathname); // clean the URL so a refresh doesn't re-trigger
       }
     }catch(e){}
-    this.gbtn = React.createRef();
     this.state = {
       screen: user ? 'dashboard' : 'signin',
       user, paid, googleClientId: gid, stripePk: spk,
@@ -201,23 +200,31 @@ class App extends React.Component {
     ];
   }
 
-  componentDidMount(){ this.tryInitGoogle(); }
-  componentDidUpdate(){ if(this.state.screen === 'signin') this.tryInitGoogle(); }
-
-  tryInitGoogle(){
+  // Real Google sign-in from the branded button. Uses the OAuth token model (same as the
+  // calendar flow), then reads the profile from the userinfo endpoint. Falls back to a demo
+  // login only when no Client ID is configured or the Google script hasn't loaded.
+  googleSignIn = () => {
     const id = this.state.googleClientId;
-    if(!id || !window.google || !this.gbtn.current || this._gInit) return;
-    try{
-      window.google.accounts.id.initialize({ client_id: id, callback: (r) => this.onGoogleCred(r) });
-      window.google.accounts.id.renderButton(this.gbtn.current, {theme:'outline', size:'large', width:360, text:'continue_with'});
-      this._gInit = true;
-    }catch(e){}
-  }
-  onGoogleCred(resp){
-    try{
-      const p = JSON.parse(atob(resp.credential.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
-      this.login({email:p.email, name:p.name, picture:p.picture});
-    }catch(e){ this.demoGoogle(); }
+    const g = window.google;
+    if(id && g && g.accounts && g.accounts.oauth2){
+      try{
+        const tc = g.accounts.oauth2.initTokenClient({
+          client_id: id,
+          scope: 'openid email profile',
+          callback: async (tok) => {
+            if(!tok || !tok.access_token){ return; }
+            try{
+              const r = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {headers:{Authorization:'Bearer '+tok.access_token}});
+              const p = await r.json();
+              this.login({email:p.email, name:p.name, picture:p.picture});
+            }catch(e){ this.demoGoogle(); }
+          },
+        });
+        tc.requestAccessToken();
+        return;
+      }catch(e){}
+    }
+    this.demoGoogle();
   }
 
   login = (user) => { try{localStorage.setItem('bp_user', JSON.stringify(user));}catch(e){}; this.setState({user, screen:'upload'}); }
@@ -633,9 +640,8 @@ class App extends React.Component {
           <div style=${s('background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:32px 28px')}>
             <h1 style=${s("font-family:'Fraunces',serif;font-weight:500;font-size:27px;line-height:1.12;margin:0 0 6px;letter-spacing:-.01em")}>Understand your bloodwork.</h1>
             <p style=${s('margin:0 0 24px;color:var(--ink-soft);font-size:14px')}>Sign in to upload your lab reports and see them in plain language.</p>
-            <div ref=${this.gbtn} style=${s('display:flex;justify-content:center;min-height:0;margin-bottom:14px')}></div>
             <div style=${s('display:flex;justify-content:center')}>
-              <button className="gsi-material-button" onClick=${this.demoGoogle} style=${s('width:100%;max-width:100%')}>
+              <button className="gsi-material-button" onClick=${this.googleSignIn} style=${s('width:100%;max-width:100%')}>
                 <div className="gsi-material-button-state"></div>
                 <div className="gsi-material-button-content-wrapper">
                   <div className="gsi-material-button-icon">
