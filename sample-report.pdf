@@ -1,0 +1,69 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 1110 >>
+stream
+BT
+/F1 10 Tf
+12 TL
+40 760 Td
+(Metropolis Healthcare - Comprehensive Health Checkup) Tj
+T*
+(Patient: Test Patient   Age: 40   Sex: Male) Tj
+T*
+(Test Name                     Result    Unit      Reference) Tj
+T*
+(Glycated Haemoglobin \(HbA1c\)  6.1       %         4.0 - 5.6) Tj
+T*
+(Glucose Fasting               102       mg/dL     70 - 99) Tj
+T*
+(25-OH Vitamin D               18.4      ng/mL     30 - 100) Tj
+T*
+(LDL Cholesterol               128       mg/dL     < 100) Tj
+T*
+(HDL Cholesterol               58        mg/dL     > 40) Tj
+T*
+(Non-HDL Cholesterol           140       mg/dL     < 130) Tj
+T*
+(Total IgE                     540       IU/mL     < 100) Tj
+T*
+(TSH                           3.4       uIU/mL    0.54 - 5.3) Tj
+T*
+(Total Leucocyte Count \(WBC\)   7200      /cu.mm    4000 - 10500) Tj
+T*
+(Hemoglobin                    14.2      gm/dL     13.5 - 18) Tj
+T*
+(Creatinine                    0.95      mg/dL     0.70 - 1.20) Tj
+T*
+(SGPT \(ALT\)                    22        U/L       0 - 45) Tj
+T*
+(HCV Antibody                  Non-Reactive) Tj
+T*
+(Urine Routine                 Normal) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000001403 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1471
+%%EOF

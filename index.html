@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arogya — Understand your bloodwork</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root{
+    --bg:#EAF0EE; --surface:#FFFFFF; --ink:#14302A; --ink-soft:#516761; --ink-faint:#7A8C87;
+    --line:#DBE4E0; --line-soft:#EAF0ED; --zone:#D3DAD7;
+    --good:#2F9E7A; --good-band:#59C295; --good-band-line:#2FA579; --good-bg:#E3F3EC;
+    --watch:#C08A2A; --watch-bg:#FaF2E1; --out:#C34B34; --out-bg:#FBEAE5; --teal:#0E7C6B;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',system-ui,sans-serif;line-height:1.5}
+  a{color:var(--teal);cursor:pointer} a:hover{color:#0a5e51}
+  details.panel summary{list-style:none}
+  details.panel summary::-webkit-details-marker{display:none}
+  details.panel[open] .caret{transform:rotate(90deg)}
+  .caret{transition:transform .2s}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  /* hover states (ported from the design's style-hover attributes) */
+  .h-google:hover{border-color:#B9C7C1 !important;background:#FbFdFc !important}
+  .h-teal:hover{background:#0a5e51 !important}
+  .h-cal:hover{border-color:var(--teal) !important;background:#FbFdFc !important}
+  .h-pay:hover{filter:brightness(.94) !important}
+  input:focus{border-color:var(--teal) !important;outline:none}
+
+  /* Official Google "Continue with Google" button (Google brand guidelines) */
+  .gsi-material-button {
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    -webkit-appearance: none;
+    background-color: #131314;
+    background-image: none;
+    border: 1px solid #747775;
+    -webkit-border-radius: 20px;
+    border-radius: 20px;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    color: #e3e3e3;
+    cursor: pointer;
+    font-family: 'Roboto', arial, sans-serif;
+    font-size: 14px;
+    height: 40px;
+    letter-spacing: 0.25px;
+    outline: none;
+    overflow: hidden;
+    padding: 0 12px;
+    position: relative;
+    text-align: center;
+    -webkit-transition: background-color .218s, border-color .218s, box-shadow .218s;
+    transition: background-color .218s, border-color .218s, box-shadow .218s;
+    vertical-align: middle;
+    white-space: nowrap;
+    width: auto;
+    max-width: 400px;
+    min-width: min-content;
+    border-color: #8e918f;
+  }
+  .gsi-material-button .gsi-material-button-icon {
+    height: 20px;
+    margin-right: 10px;
+    min-width: 20px;
+    width: 20px;
+  }
+  .gsi-material-button .gsi-material-button-content-wrapper {
+    -webkit-align-items: center;
+    align-items: center;
+    display: flex;
+    -webkit-flex-direction: row;
+    flex-direction: row;
+    -webkit-flex-wrap: nowrap;
+    flex-wrap: nowrap;
+    height: 100%;
+    justify-content: space-between;
+    position: relative;
+    width: 100%;
+  }
+  .gsi-material-button .gsi-material-button-contents {
+    -webkit-flex-grow: 1;
+    flex-grow: 1;
+    font-family: 'Roboto', arial, sans-serif;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: top;
+  }
+  .gsi-material-button .gsi-material-button-state {
+    -webkit-transition: opacity .218s;
+    transition: opacity .218s;
+    bottom: 0;
+    left: 0;
+    opacity: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+  .gsi-material-button:disabled {
+    cursor: default;
+    background-color: #13131461;
+    border-color: #8e918f1f;
+  }
+  .gsi-material-button:disabled .gsi-material-button-state {
+    background-color: #e3e3e31f;
+  }
+  .gsi-material-button:disabled .gsi-material-button-contents {
+    opacity: 38%;
+  }
+  .gsi-material-button:disabled .gsi-material-button-icon {
+    opacity: 38%;
+  }
+  .gsi-material-button:not(:disabled):active .gsi-material-button-state,
+  .gsi-material-button:not(:disabled):focus .gsi-material-button-state {
+    background-color: white;
+    opacity: 12%;
+  }
+  .gsi-material-button:not(:disabled):hover {
+    -webkit-box-shadow: 0 1px 2px 0 rgba(60, 64, 67, .30), 0 1px 3px 1px rgba(60, 64, 67, .15);
+    box-shadow: 0 1px 2px 0 rgba(60, 64, 67, .30), 0 1px 3px 1px rgba(60, 64, 67, .15);
+  }
+  .gsi-material-button:not(:disabled):hover .gsi-material-button-state {
+    background-color: white;
+    opacity: 8%;
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="module">
+import React from 'https://esm.sh/react@18.3.1';
+import { createRoot } from 'https://esm.sh/react-dom@18.3.1/client';
+import htm from 'https://esm.sh/htm@3.1.1';
+import * as pdfjsLib from 'https://esm.sh/pdfjs-dist@4.4.168/build/pdf.min.mjs';
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://esm.sh/pdfjs-dist@4.4.168/build/pdf.worker.min.mjs';
+const html = htm.bind(React.createElement);
+
+// Parse an inline CSS string into a React style object so the design's
+// original inline styles can be carried over almost verbatim.
+function s(css){
+  const o = {};
+  if(!css) return o;
+  css.split(';').forEach(rule=>{
+    const i = rule.indexOf(':');
+    if(i < 0) return;
+    let k = rule.slice(0, i).trim();
+    const v = rule.slice(i + 1).trim();
+    if(!k || !v) return;
+    k = k.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+    o[k] = v;
+  });
+  return o;
+}
+
+class App extends React.Component {
+  constructor(props){
+    super(props);
+    let user = null, paid = false, gid = '', spk = '';
+    try{
+      user = JSON.parse(localStorage.getItem('bp_user') || 'null');
+      paid = localStorage.getItem('bp_paid') === '1';
+      gid  = localStorage.getItem('bp_gid') || '';
+      spk  = localStorage.getItem('bp_spk') || '';
+    }catch(e){}
+    this.gbtn = React.createRef();
+    this.state = {
+      screen: user ? 'dashboard' : 'signin',
+      user, paid, googleClientId: gid, stripePk: spk,
+      email: '', dragOver: false, showPaywall: false, paying: false,
+      showConfig: false, calStatus: 'idle',
+      reports: this.seedReports(),
+      parsed: {},      // { reportId: { markerName: value } } — values parsed from uploaded reports
+      parseMsg: '',    // transient status line shown on the upload screen
+    };
+  }
+
+  seedReports(){
+    return [
+      {id:'r1', label:'Full metabolic + lipid panel', date:'2025-06-10', source:'sample'},
+      {id:'r2', label:'Follow-up lipid + vitamin panel', date:'2025-12-12', source:'sample'},
+      {id:'r3', label:'Annual comprehensive panel', date:'2026-06-10', source:'sample'},
+    ];
+  }
+
+  componentDidMount(){ this.tryInitGoogle(); }
+  componentDidUpdate(){ if(this.state.screen === 'signin') this.tryInitGoogle(); }
+
+  tryInitGoogle(){
+    const id = this.state.googleClientId;
+    if(!id || !window.google || !this.gbtn.current || this._gInit) return;
+    try{
+      window.google.accounts.id.initialize({ client_id: id, callback: (r) => this.onGoogleCred(r) });
+      window.google.accounts.id.renderButton(this.gbtn.current, {theme:'outline', size:'large', width:360, text:'continue_with'});
+      this._gInit = true;
+    }catch(e){}
+  }
+  onGoogleCred(resp){
+    try{
+      const p = JSON.parse(atob(resp.credential.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+      this.login({email:p.email, name:p.name, picture:p.picture});
+    }catch(e){ this.demoGoogle(); }
+  }
+
+  login = (user) => { try{localStorage.setItem('bp_user', JSON.stringify(user));}catch(e){}; this.setState({user, screen:'upload'}); }
+  demoGoogle = () => this.login({email:'ajay@gmail.com', name:'Ajay Varadharajan'});
+  emailSignin = () => { const e = (this.state.email || '').trim(); if(!e) return; this.login({email:e, name:e.split('@')[0]}); }
+  onEmail = (ev) => this.setState({email: ev.target.value});
+  signOut = () => { try{localStorage.removeItem('bp_user');}catch(e){}; this._gInit = false; this.setState({user:null, screen:'signin'}); }
+
+  goDashboard = () => this.setState({screen:'dashboard'});
+  goUpload = () => this.setState({screen:'upload'});
+
+  onDragOver = (e) => { e.preventDefault(); if(!this.state.dragOver) this.setState({dragOver:true}); }
+  onDragLeave = (e) => { e.preventDefault(); this.setState({dragOver:false}); }
+  onDrop = (e) => { e.preventDefault(); this.setState({dragOver:false}); this.addFiles(e.dataTransfer.files); }
+  onFiles = (e) => this.addFiles(e.target.files);
+  async addFiles(fileList){
+    const files = Array.from(fileList || []);
+    if(!files.length) return;
+    const stamp = Date.now();
+    const add = files.map((f, i) => {
+      const d = f.lastModified ? new Date(f.lastModified) : new Date();
+      return {file:f, id:'u'+stamp+i, label:f.name.replace(/\.[^.]+$/,''), date:d.toISOString().slice(0,10), source:'upload'};
+    });
+    // Add the report entries immediately (without the raw File handle).
+    this.setState(st => ({reports:[...st.reports, ...add.map(({file, ...r}) => r)].sort((a,b)=>a.date.localeCompare(b.date))}));
+    // Parse PDFs in the background; images are listed but not parsed (no OCR).
+    for(const r of add){
+      if(!/\.pdf$/i.test(r.file.name)){
+        this.setState({parseMsg:r.label+' added — image reports aren’t read automatically yet, showing sample values.'});
+        continue;
+      }
+      this.setState({parseMsg:'Reading '+r.label+'…'});
+      try{
+        const text = await this.extractPdfText(r.file);
+        const vals = this.parseMarkers(text);
+        const n = Object.keys(vals).length;
+        if(n){ this.setState(st => ({parsed:{...st.parsed, [r.id]:vals}, parseMsg:'Read '+n+' markers from '+r.label+'.'})); }
+        else { this.setState({parseMsg:'No recognizable markers found in '+r.label+' — showing sample values.'}); }
+      }catch(e){ this.setState({parseMsg:'Couldn’t read '+r.label+' — showing sample values.'}); }
+    }
+  }
+
+  // ---------- report parsing ----------
+  async extractPdfText(file){
+    const buf = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({data:buf}).promise;
+    let text = '';
+    for(let p = 1; p <= pdf.numPages; p++){
+      const page = await pdf.getPage(p);
+      const content = await page.getTextContent();
+      // Join items on a line by their y position so "Name value unit range" stays together.
+      const rows = {};
+      content.items.forEach(it => {
+        const y = it.transform ? Math.round(it.transform[5]) : 0;
+        (rows[y] = rows[y] || []).push(it.str);
+      });
+      Object.keys(rows).sort((a,b)=>b-a).forEach(y => { text += rows[y].join(' ') + '\n'; });
+    }
+    return text;
+  }
+
+  aliases(){
+    return {
+      'HbA1c':['Glycated Haemoglobin','Glycated Hemoglobin','HbA1C','A1c','Hb A1c'],
+      'Fasting glucose':['Glucose Fasting','Fasting Blood Sugar','FBS'],
+      'Post-prandial glucose':['Post Prandial Glucose','PP Glucose','PPBS'],
+      'Vitamin D':['25-OH Vitamin D','25 Hydroxy Vitamin D','Vitamin D (25-OH)','25-Hydroxyvitamin D'],
+      'Vitamin B12':['Vitamin B-12','B12','Cyanocobalamin'],
+      'LDL cholesterol':['LDL Cholesterol','LDL-C','LDL'],
+      'HDL cholesterol':['HDL Cholesterol','HDL-C','HDL'],
+      'Non-HDL cholesterol':['Non HDL Cholesterol','Non-HDL-C'],
+      'Total cholesterol':['Cholesterol Total','Cholesterol, Total'],
+      'SGPT (ALT)':['SGPT','ALT','Alanine'],
+      'SGOT (AST)':['SGOT','AST','Aspartate'],
+      'Bilirubin total':['Total Bilirubin','Bilirubin, Total'],
+      'Bilirubin direct':['Direct Bilirubin','Bilirubin, Direct'],
+      'Urea nitrogen (BUN)':['Blood Urea Nitrogen','BUN','Urea Nitrogen'],
+      'Haemoglobin':['Hemoglobin','Hb'],
+      'RBC count':['RBC','Red Blood Cell','Total RBC'],
+      'WBC count':['WBC','White Blood Cell','Total WBC','Total Leucocyte'],
+      'IgE total':['Total IgE','Immunoglobulin E','Serum IgE'],
+      'TSH':['Thyroid Stimulating Hormone'],
+      'Free T3':['FT3','Free Tri-iodothyronine'],
+      'Free T4':['FT4','Free Thyroxine'],
+      'eGFR':['GFR','Estimated GFR'],
+      'hsCRP':['hs-CRP','High Sensitivity CRP','CRP High Sensitivity'],
+      'Total PSA':['PSA','Prostate Specific Antigen'],
+      'Serum iron':['Iron','Iron Serum'],
+      'HCV antibody':['Anti HCV','HCV Ab','Anti-HCV'],
+      'HBsAg':['Hepatitis B Surface Antigen','HBs Ag'],
+      'Urine routine':['Urine Routine','Urine Analysis','Urinalysis'],
+    };
+  }
+
+  parseMarkers(text){
+    const norm = (text || '').replace(/ /g, ' ').replace(/[ \t]+/g, ' ');
+    const lines = norm.split(/\n+/).map(l => l.trim()).filter(Boolean);
+    const cat = this.data();
+    const aliasMap = this.aliases();
+    // A standalone number: not glued to a letter/digit (so "6.1" matches but the "1" in "A1c" does not). Handles "7,200".
+    const numRe = /(?<![A-Za-z\d.])(?:\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)(?![A-Za-z\d])/g;
+    const catRe = /non[-\s]?reactive|not[-\s]?detected|reactive|negative|positive|abnormal|detected|normal/i;
+    const out = {};
+    for(const d of cat){
+      const names = [d.name, ...(aliasMap[d.name] || [])];
+      // Best candidate line across all aliases: prefer the match closest to the line start
+      // (lab tables put the test name first), then the longest (most specific) alias.
+      let best = null;
+      for(const nm of names){
+        const esc = nm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+');
+        const re = new RegExp('(?<![A-Za-z0-9])' + esc + '(?![A-Za-z0-9])', 'i');
+        for(const line of lines){
+          const m = re.exec(line);
+          if(!m) continue;
+          const cand = {index:m.index, len:m[0].length, after:line.slice(m.index + m[0].length), line};
+          if(best === null || cand.index < best.index || (cand.index === best.index && cand.len > best.len)) best = cand;
+        }
+      }
+      if(!best) continue;
+      if(d.cat){
+        const c = catRe.exec(best.after) || catRe.exec(best.line);
+        if(c) out[d.name] = c[0].replace(/\s+/g, '-').toLowerCase().replace(/^\w/, ch => ch.toUpperCase());
+        continue;
+      }
+      numRe.lastIndex = 0;
+      const mm = numRe.exec(best.after);
+      if(mm){ const v = parseFloat(mm[0].replace(/,/g, '')); if(!Number.isNaN(v)) out[d.name] = v; }
+    }
+    return out;
+  }
+
+  // Heuristic status for a parsed value (sample rows keep their curated status).
+  classify(d, val){
+    if(d.cat) return /reactive|positive|abnormal|detected/i.test(String(val)) && !/non-?reactive|not/i.test(String(val)) ? 'out' : 'good';
+    const {low, high, type} = d;
+    let inRange, dist, span;
+    if(type === 'min'){ span = Math.max(high - low, low * 0.2) || 1; inRange = val >= low; dist = inRange ? 0 : (low - val); }
+    else if(type === 'max'){ span = high || 1; inRange = val <= high; dist = inRange ? 0 : (val - high); }
+    else { span = (high - low) || 1; inRange = val >= low && val <= high; dist = inRange ? 0 : (val < low ? low - val : val - high); }
+    if(inRange) return 'good';
+    return (dist / span <= 0.15) ? 'watch' : 'out';
+  }
+
+  // The metric list for the active (latest parsed) report, or the pure sample set.
+  activeData(){
+    const withParsed = this.state.reports.filter(r => this.state.parsed[r.id]);
+    if(!withParsed.length) return {rows: this.data(), active: null, parsedCount: 0};
+    const active = [...withParsed].sort((a,b) => a.date.localeCompare(b.date)).slice(-1)[0];
+    const pv = this.state.parsed[active.id];
+    let parsedCount = 0;
+    const rows = this.data().map(d => {
+      const v = pv[d.name];
+      if(v == null) return d;
+      parsedCount++;
+      return {...d, val: v, status: this.classify(d, v), _real: true};
+    });
+    return {rows, active, parsedCount};
+  }
+
+  openPaywall = () => this.setState({showPaywall:true});
+  closePaywall = () => this.setState({showPaywall:false, paying:false});
+  stop = (e) => e.stopPropagation();
+  payNow = () => {
+    if(this.state.paying) return;
+    this.setState({paying:true});
+    setTimeout(() => { try{localStorage.setItem('bp_paid','1');}catch(e){}; this.setState({paid:true, paying:false, showPaywall:false}); }, 1400);
+  }
+
+  openConfig = () => this.setState({showConfig:true});
+  closeConfig = () => this.setState({showConfig:false});
+  onGoogleId = (e) => this.setState({googleClientId:e.target.value});
+  onStripePk = (e) => this.setState({stripePk:e.target.value});
+  saveConfig = () => { try{localStorage.setItem('bp_gid',this.state.googleClientId);localStorage.setItem('bp_spk',this.state.stripePk);}catch(e){}; this._gInit = false; this.setState({showConfig:false}); }
+
+  // ---------- calendar ----------
+  calendarTasks(){
+    const defs = [
+      {t:'Start Vitamin D correction course', d:'Ask your doctor about a weekly high-dose sachet for 6–8 weeks, then a daily maintenance dose. Get 15–20 min of midday sun on most days.', off:1},
+      {t:'Book a doctor visit about raised IgE (877)', d:'Discuss the high IgE. If you have sneezing, itching or wheeze, ask about a specific allergen panel.', off:3},
+      {t:'Begin heart-health habits (HbA1c + LDL)', d:'150 min/week of activity, trim refined carbs and sugary drinks, lean on fibre, nuts and unsaturated fats.', off:6},
+      {t:'Recheck bloodwork (Vitamin D + full panel)', d:'Re-test in ~12 weeks as the report recommends, to confirm Vitamin D is climbing and markers are improving.', off:84},
+    ];
+    const pad = n => String(n).padStart(2,'0');
+    const iso = d => d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes())+':00';
+    const compact = d => d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'T'+pad(d.getHours())+pad(d.getMinutes())+'00';
+    return defs.map(def => {
+      const start = new Date(); start.setDate(start.getDate()+def.off); start.setHours(9,0,0,0);
+      const end = new Date(start.getTime()+30*60000);
+      const summary = 'Arogya: '+def.t;
+      const description = def.d+'\n\n— from your Arogya action plan';
+      return {summary, description, startIso:iso(start), endIso:iso(end),
+        templateUrl:'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(summary)+'&details='+encodeURIComponent(description)+'&dates='+compact(start)+'/'+compact(end)};
+    });
+  }
+  sendToCalendar = () => {
+    if(this.state.calStatus === 'working') return;
+    const tasks = this.calendarTasks();
+    const id = this.state.googleClientId;
+    const g = window.google;
+    if(id && g && g.accounts && g.accounts.oauth2){
+      this.setState({calStatus:'working'});
+      try{
+        const tc = g.accounts.oauth2.initTokenClient({
+          client_id: id,
+          scope: 'https://www.googleapis.com/auth/calendar.events',
+          callback: async (tok) => {
+            if(!tok || !tok.access_token){ this.calFallback(tasks); return; }
+            try{ for(const t of tasks){ await this.insertEvent(tok.access_token, t); } this.setState({calStatus:'done'}); }
+            catch(e){ this.calFallback(tasks); }
+          },
+        });
+        tc.requestAccessToken();
+      }catch(e){ this.calFallback(tasks); }
+    } else {
+      this.calFallback(tasks);
+    }
+  }
+  insertEvent(token, t){
+    const tz = (Intl.DateTimeFormat().resolvedOptions().timeZone) || 'UTC';
+    const body = { summary:t.summary, description:t.description,
+      start:{dateTime:t.startIso, timeZone:tz}, end:{dateTime:t.endIso, timeZone:tz},
+      reminders:{useDefault:false, overrides:[{method:'popup',minutes:60},{method:'email',minutes:1440}]} };
+    return fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+      method:'POST', headers:{'Authorization':'Bearer '+token, 'Content-Type':'application/json'}, body:JSON.stringify(body)
+    }).then(r => { if(!r.ok) throw new Error('cal'); return r.json(); });
+  }
+  calFallback(tasks){
+    try{ tasks.forEach((t, i) => { setTimeout(() => window.open(t.templateUrl, '_blank'), i*350); }); }catch(e){}
+    this.setState({calStatus:'done'});
+  }
+
+  // ---------- data helpers ----------
+  geometry(d){
+    let sMin, sMax;
+    if(d.type === 'range'){ const pad = (d.high-d.low)*0.55 || 1; sMin = Math.min(d.low-pad, d.val-pad*0.4); sMax = Math.max(d.high+pad, d.val+pad*0.4); }
+    else if(d.type === 'max'){ sMin = 0; sMax = Math.max(d.high*1.35, d.val*1.12); }
+    else{ sMin = Math.min(d.low*0.35, d.val*0.85); sMax = Math.max(d.high, d.val)*1.05; }
+    const pct = v => Math.max(0, Math.min(100, ((v-sMin)/(sMax-sMin))*100));
+    let gL, gR;
+    if(d.type === 'min'){ gL = pct(d.low); gR = 100; }
+    else if(d.type === 'max'){ gL = 0; gR = pct(d.high); }
+    else{ gL = pct(d.low); gR = pct(d.high); }
+    return {gL, gR, mark:pct(d.val), sMin, sMax};
+  }
+  fmt(n){ return (typeof n === 'number') ? (Number.isInteger(n) ? n : n.toLocaleString(undefined, {maximumFractionDigits:2})) : n; }
+  col(st){ return st === 'out' ? 'var(--out)' : st === 'watch' ? 'var(--watch)' : 'var(--good)'; }
+  word(st){ return st === 'out' ? 'out of range' : st === 'watch' ? 'borderline' : 'in range'; }
+
+  enrich(d, locked){
+    const g = this.geometry(d);
+    return {
+      name:d.name, unit:d.unit || '', col:this.col(d.status), word:this.word(d.status),
+      valDisplay: d.cat ? d.val : this.fmt(d.val),
+      valColor: d.status === 'good' ? 'var(--ink)' : this.col(d.status),
+      valFilter: (locked && d.status !== 'good') ? 'blur(6px)' : 'none',
+      dotFilter: (locked && d.status !== 'good') ? 'blur(5px)' : 'none',
+      showBar: !d.cat,
+      gL:g.gL, gW:g.gR-g.gL, mark:g.mark,
+      loLab: d.type === 'max' ? '0' : String(this.fmt(g.sMin)),
+      midLab: d.type === 'min' ? `healthy ≥ ${this.fmt(d.low)}` : d.type === 'max' ? `healthy ≤ ${this.fmt(d.high)}` : `healthy ${this.fmt(d.low)}–${this.fmt(d.high)}`,
+      hiLab: String(this.fmt(g.sMax)),
+      what:d.what,
+    };
+  }
+
+  buildTrends(){
+    const hist = [
+      {key:'Vitamin D', unit:'ng/mL', vals:[9.2,11.5,13.86], dates:['2025-06-10','2025-12-12','2026-06-10'], better:'up', note:'Still low, but climbing steadily. Keep the correction course going.'},
+      {key:'HbA1c', unit:'%', vals:[5.9,5.8,5.6], dates:['2025-06-10','2025-12-12','2026-06-10'], better:'down', note:'Trending down toward the middle of normal — habits are working.'},
+      {key:'LDL cholesterol', unit:'mg/dL', vals:[138,126,113.7], dates:['2025-06-10','2025-12-12','2026-06-10'], better:'down', note:'Dropping nicely, now just past optimal. Almost there.'},
+      {key:'IgE total', unit:'IU/mL', vals:[910,890,877], dates:['2025-06-10','2025-12-12','2026-06-10'], better:'down', note:'Barely moving and still high — worth an allergy work-up.'},
+    ];
+    // Prefer real parsed history: values for this marker across reports, in date order.
+    const reps = [...this.state.reports].sort((a,b) => a.date.localeCompare(b.date));
+    const realSeries = key => {
+      const pts = [];
+      reps.forEach(r => { const pv = this.state.parsed[r.id]; if(pv && pv[key] != null) pts.push({v:pv[key], date:r.date}); });
+      return pts.length >= 2 ? pts : null;
+    };
+    const fmtD = str => { const [y,m] = str.split('-'); return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m-1]+" '"+y.slice(2); };
+    const W = 260, H = 64, PX = 8;
+    return hist.map(h => {
+      const real = realSeries(h.key);
+      const series = real || h.vals.map((v, i) => ({v, date:h.dates[i]}));
+      const vals = series.map(p => p.v);
+      const dates = series.map(p => p.date);
+      const min = Math.min(...vals), max = Math.max(...vals), span = (max-min) || 1;
+      const n = vals.length;
+      const pts = vals.map((v, i) => {
+        const x = PX + (n===1 ? 0.5 : i/(n-1))*(W-PX*2);
+        const y = 8 + (1-(v-min)/span)*(H-16);
+        return {x:+x.toFixed(1), y:+y.toFixed(1), v};
+      });
+      const first = vals[0], last = vals[vals.length-1];
+      const improved = h.better === 'up' ? last>first : last<first;
+      const pctChange = first ? Math.round(((last-first)/first)*100) : 0;
+      return {
+        name:h.key, unit:h.unit,
+        poly: pts.map(p => `${p.x},${p.y}`).join(' '),
+        dots: pts.map(p => ({x:p.x, y:p.y, fill: improved ? 'var(--good)' : 'var(--watch)'})),
+        dirColor: improved ? 'var(--good)' : 'var(--watch)',
+        deltaLabel: (pctChange>0 ? '+' : '')+pctChange+'%',
+        firstDate: fmtD(dates[0]), lastDate: fmtD(dates[dates.length-1]),
+        takeaway: real ? 'From your uploaded reports.' : h.note,
+      };
+    });
+  }
+
+  vm(){
+    const st = this.state;
+    const locked = !st.paid;
+    const {rows: data, active, parsedCount} = this.activeData();
+    const order =['Vitamins & iron','Allergy & immune','Diabetes & metabolism','Cholesterol & heart risk','Thyroid','Liver','Kidney','Blood count','Minerals & electrolytes','Screening markers'];
+    const pm = {
+      'Vitamins & iron':{icon:'💊',intro:'The raw materials your body runs on — and whether the tank is full.'},
+      'Allergy & immune':{icon:'🛡️',intro:'How reactive and defensive your immune system is.'},
+      'Diabetes & metabolism':{icon:'🍬',intro:'How well your body handles sugar and energy.'},
+      'Cholesterol & heart risk':{icon:'❤️',intro:'The fats in your blood and your long-term heart risk.'},
+      'Thyroid':{icon:'🦋',intro:'The gland that sets your metabolism and energy.'},
+      'Liver':{icon:'⚗️',intro:'How well your liver is processing and whether it is strained.'},
+      'Kidney':{icon:'🫘',intro:'How well your kidneys filter waste from blood.'},
+      'Blood count':{icon:'🩸',intro:'The cells that carry oxygen, clot, and fight infection.'},
+      'Minerals & electrolytes':{icon:'🧂',intro:'The salts and minerals that keep everything ticking.'},
+      'Screening markers':{icon:'🔬',intro:'Broad checks for infections, cancers and other conditions.'},
+    };
+    const reason = {
+      'Vitamin D':'Clearly low — your #1 fix (see plan).',
+      'IgE total':'Clearly high — worth getting checked.',
+      'HbA1c':'Top of the normal range — worth watching.',
+      'LDL cholesterol':'Just past optimal — lifestyle nudge.',
+      'Non-HDL cholesterol':'Just past optimal — moves with LDL.',
+      'TIBC':'A lab quirk — your iron is fine.',
+      'Bilirubin direct':'Over by 0.01 — effectively noise.',
+      'MPV':'Platelets slightly large — not meaningful alone.',
+    };
+
+    const attn = data.filter(d => d.status !== 'good')
+      .sort((a,b) => (a.status==='out'?0:1) - (b.status==='out'?0:1))
+      .map(d => { const e = this.enrich(d, locked); e.reason = reason[d.name] || ''; return e; });
+
+    const byPanel = {}; data.forEach(d => { (byPanel[d.panel] = byPanel[d.panel] || []).push(d); });
+    const panels = order.map(p => {
+      const items = byPanel[p] || []; const meta = pm[p];
+      const worst = items.some(i => i.status==='out') ? 'out' : items.some(i => i.status==='watch') ? 'watch' : 'good';
+      const flags = items.filter(i => i.status !== 'good').length;
+      return {
+        name:p, icon:meta.icon, intro:meta.intro, open: worst !== 'good',
+        badgeBg: worst==='out' ? 'var(--out-bg)' : worst==='watch' ? 'var(--watch-bg)' : 'var(--good-bg)',
+        flagLabel: flags ? flags+' flagged' : 'all clear',
+        countBg: flags ? 'var(--out-bg)' : 'var(--good-bg)', countColor: flags ? '#a53a24' : '#1c6e54',
+        metrics: items.map(d => this.enrich(d, locked)),
+      };
+    });
+
+    const plan = [
+      {rank:'1',rankColor:'var(--out)',tag:'Do this first · clearly low',title:'Raise your Vitamin D (13.86 → aim 30+)',items:[
+        'Your one genuinely low result and the easiest to fix. Ask your doctor about a correction course — often a weekly high-dose sachet for 6–8 weeks, then a daily maintenance dose.',
+        'Get 15–20 min of midday sun on arms and face several days a week.',
+        'Food helpers: fatty fish, egg yolk, fortified milk — though diet alone rarely fixes a level this low.',
+        'Recheck in about 12 weeks, which the report itself recommends.']},
+      {rank:'2',rankColor:'var(--watch)',tag:'Get it looked at · clearly high',title:'Investigate the raised IgE (877)',items:[
+        'A level this high usually points to an allergic tendency (hay-fever, eczema, asthma) or occasionally a skin or parasitic cause.',
+        'Bring it to your doctor. With symptoms like sneezing, itching or wheeze, a specific allergen panel is the logical next step.',
+        'No self-treatment needed — this is a flag for a clinician, not an emergency.']},
+      {rank:'3',rankColor:'var(--teal)',tag:'Prevention · trending toward the edge',title:'Nudge HbA1c and LDL down together',items:[
+        'HbA1c is at the top of normal and LDL/non-HDL are just past optimal — the same habits move all three.',
+        'Add 150 min a week of activity, trim refined carbs and sugary drinks, lean on fibre, nuts and unsaturated fats.',
+        'Your HDL is high and triglycerides low — a strong base already. Re-test at your next annual check.']},
+      {rank:'4',rankColor:'var(--ink-soft)',tag:'Note only · no action',title:'Leave the near-misses alone',items:[
+        'TIBC, MPV and direct bilirubin each sit a hair outside their line, with neighbouring results normal. Let your doctor glance at them and re-check next routine panel.']},
+    ];
+
+    const reps = [...st.reports].sort((a,b) => a.date.localeCompare(b.date));
+    const dLabel = iso => { const d = new Date(iso+'T00:00'); return d.toLocaleDateString(undefined, {day:'numeric', month:'short', year:'numeric'}); };
+
+    return {
+      isSignin: st.screen==='signin', isUpload: st.screen==='upload', isDashboard: st.screen==='dashboard',
+      dzBorder: st.dragOver ? 'var(--teal)' : 'var(--line)', dzBg: st.dragOver ? '#E3F3EC' : 'var(--surface)',
+      parseMsg: st.parseMsg,
+      parseInfo: active ? `Showing ${parsedCount} marker${parsedCount===1?'':'s'} read from “${active.label}” (${dLabel(active.date)}). Markers not found in your report fall back to sample values.` : '',
+      userEmail: st.user ? st.user.email : '',
+      hasReports: reps.length>0, reportCount: reps.length,
+      reportCountLabel: reps.length+' report'+(reps.length===1?'':'s')+' loaded',
+      reports: reps.map(r => ({label:r.label, dateLabel:dLabel(r.date), sourceLabel: r.source==='upload'?' · uploaded':' · sample'})),
+      trends: this.buildTrends(),
+      attn, plan, panels,
+      locked, planItemFilter: locked ? 'blur(5px)' : 'none', unlocked: !locked,
+      calBtnLabel: ({idle:'Send tasks to Google Calendar', working:'Adding to Google Calendar…', done:'Added to your Google Calendar ✓', error:'Couldn’t add — tap to retry'})[st.calStatus] || 'Send tasks to Google Calendar',
+      calBtnColor: st.calStatus==='done' ? 'var(--good)' : 'var(--teal)',
+      showPaywall: st.showPaywall, paying: st.paying,
+      payBtnBg: st.paying ? '#0a5e51' : 'var(--teal)',
+      payBtnLabel: st.paying ? 'Processing…' : 'Pay ₹99 and unlock',
+      stripeKeyNote: st.stripePk ? ' · '+st.stripePk.slice(0,10)+'…' : '',
+      showConfig: st.showConfig, googleClientId: st.googleClientId, stripePk: st.stripePk,
+    };
+  }
+
+  // ---------- screens ----------
+  renderSignin(){
+    return html`
+      <div style=${s('min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(120% 120% at 50% -10%, #F3F8F6 0%, var(--bg) 60%)')}>
+        <div style=${s('width:100%;max-width:420px;animation:fadeUp .4s ease both')}>
+          <div style=${s('text-align:center;margin-bottom:26px')}>
+            <div style=${s("display:inline-flex;align-items:center;gap:9px;font-family:'Fraunces',serif;font-weight:600;font-size:22px;color:var(--ink)")}><span style=${s('width:30px;height:30px;border-radius:9px;background:var(--teal);display:grid;place-items:center;color:#fff;font-size:16px')}>◇</span>Arogya</div>
+          </div>
+          <div style=${s('background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:32px 28px')}>
+            <h1 style=${s("font-family:'Fraunces',serif;font-weight:500;font-size:27px;line-height:1.12;margin:0 0 6px;letter-spacing:-.01em")}>Understand your bloodwork.</h1>
+            <p style=${s('margin:0 0 24px;color:var(--ink-soft);font-size:14px')}>Sign in to upload your lab reports and see them in plain language.</p>
+            <div ref=${this.gbtn} style=${s('display:flex;justify-content:center;min-height:0;margin-bottom:14px')}></div>
+            <div style=${s('display:flex;justify-content:center')}>
+              <button className="gsi-material-button" onClick=${this.demoGoogle} style=${s('width:100%;max-width:100%')}>
+                <div className="gsi-material-button-state"></div>
+                <div className="gsi-material-button-content-wrapper">
+                  <div className="gsi-material-button-icon">
+                    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" style=${s('display:block')}>
+                      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+                      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
+                      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
+                      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
+                      <path fill="none" d="M0 0h48v48H0z"></path>
+                    </svg>
+                  </div>
+                  <span className="gsi-material-button-contents">Continue with Google</span>
+                  <span style=${s('display:none')}>Continue with Google</span>
+                </div>
+              </button>
+            </div>
+          </div>
+          <div style=${s('text-align:center;margin-top:16px;font-size:12.5px;color:var(--ink-faint)')}>
+            <a onClick=${this.openConfig} style=${s('cursor:pointer;color:var(--ink-faint);text-decoration:underline')}>Connect Google / Stripe keys</a>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  renderUpload(vm){
+    return html`
+      <div style=${s('max-width:720px;margin:0 auto;padding:28px 20px 64px;animation:fadeUp .35s ease both')}>
+        <div style=${s('display:flex;align-items:center;justify-content:space-between;margin-bottom:30px')}>
+          <div style=${s("display:inline-flex;align-items:center;gap:8px;font-family:'Fraunces',serif;font-weight:600;font-size:18px")}><span style=${s('width:26px;height:26px;border-radius:8px;background:var(--teal);display:grid;place-items:center;color:#fff;font-size:14px')}>◇</span>Arogya</div>
+          <div style=${s('display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink-soft)')}><span>${vm.userEmail}</span><a onClick=${this.signOut} style=${s('cursor:pointer')}>Sign out</a></div>
+        </div>
+        <div style=${s('font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);font-weight:600')}>Step 1</div>
+        <h1 style=${s("font-family:'Fraunces',serif;font-weight:500;font-size:clamp(26px,6vw,36px);line-height:1.1;margin:6px 0 8px;letter-spacing:-.01em")}>Upload your lab reports</h1>
+        <p style=${s('margin:0 0 24px;color:var(--ink-soft);font-size:14.5px;max-width:52ch')}>Drop in one report or a whole history — we read the date on each and track how your markers move over time.</p>
+        <label onDragOver=${this.onDragOver} onDragLeave=${this.onDragLeave} onDrop=${this.onDrop} style=${s(`display:block;border:2px dashed ${vm.dzBorder};border-radius:18px;background:${vm.dzBg};padding:40px 24px;text-align:center;cursor:pointer;transition:.15s`)}>
+          <input type="file" accept=".pdf,.png,.jpg,.jpeg" multiple onChange=${this.onFiles} style=${s('display:none')} />
+          <div style=${s('width:54px;height:54px;border-radius:14px;background:var(--good-bg);display:grid;place-items:center;margin:0 auto 14px;font-size:24px')}>↑</div>
+          <div style=${s('font-weight:600;font-size:16px;margin-bottom:4px')}>Drag & drop reports here</div>
+          <div style=${s('color:var(--ink-soft);font-size:13.5px')}>or click to browse — PDF or image, upload as many as you like</div>
+        </label>
+        ${vm.parseMsg && html`<div style=${s('margin-top:12px;font-size:12.5px;color:var(--ink-soft);display:flex;align-items:center;gap:8px')}><span style=${s('font-size:14px')}>ℹ️</span>${vm.parseMsg}</div>`}
+        ${vm.hasReports && html`
+          <div style=${s('margin-top:24px')}>
+            <div style=${s('font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;margin-bottom:10px')}>${vm.reportCountLabel}</div>
+            ${vm.reports.map((r, i) => html`
+              <div key=${i} style=${s('display:flex;align-items:center;gap:13px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin-bottom:9px')}>
+                <span style=${s('width:34px;height:34px;border-radius:9px;background:var(--good-bg);display:grid;place-items:center;font-size:16px;flex-shrink:0')}>🩸</span>
+                <div style=${s('flex:1;min-width:0')}><div style=${s('font-weight:600;font-size:14px')}>${r.label}</div><div style=${s('font-size:12.5px;color:var(--ink-soft)')}>${r.dateLabel}${r.sourceLabel}</div></div>
+                <span style=${s('font-size:11.5px;color:var(--good);font-weight:600')}>✓ ready</span>
+              </div>`)}
+            <button className="h-teal" onClick=${this.goDashboard} style=${s('width:100%;margin-top:14px;padding:14px;border:none;border-radius:13px;background:var(--teal);color:#fff;font-size:15px;font-weight:600;cursor:pointer')}>See my dashboard →</button>
+          </div>`}
+      </div>`;
+  }
+
+  renderBar(m){
+    return html`
+      <div style=${s('margin-top:9px')}>
+        <div style=${s('position:relative;height:14px;border-radius:7px;background:var(--zone);overflow:hidden')}>
+          <div style=${s(`position:absolute;top:0;bottom:0;left:${m.gL}%;width:${m.gW}%;background:var(--good-band);box-shadow:inset 0 0 0 1px var(--good-band-line)`)}></div>
+          <div style=${s(`position:absolute;top:50%;left:${m.mark}%;width:15px;height:15px;border-radius:50%;transform:translate(-50%,-50%);border:2.5px solid #fff;box-shadow:0 0 0 1.5px rgba(20,48,42,.45),0 1px 3px rgba(0,0,0,.3);background:${m.col};filter:${m.dotFilter}`)}></div>
+        </div>
+        <div style=${s("display:flex;justify-content:space-between;font-size:11px;color:var(--ink-faint);margin-top:7px;font-family:'IBM Plex Mono',monospace")}><span>${m.loLab}</span><span style=${s("color:#1b6b52;font-family:'Inter',sans-serif")}>${m.midLab}</span><span>${m.hiLab}</span></div>
+      </div>`;
+  }
+
+  renderDashboard(vm){
+    return html`
+      <div style=${s('max-width:820px;margin:0 auto;padding:20px 16px 72px')}>
+        <div style=${s('display:flex;align-items:center;justify-content:space-between;margin-bottom:18px')}>
+          <div style=${s("display:inline-flex;align-items:center;gap:8px;font-family:'Fraunces',serif;font-weight:600;font-size:17px")}><span style=${s('width:24px;height:24px;border-radius:7px;background:var(--teal);display:grid;place-items:center;color:#fff;font-size:13px')}>◇</span>Arogya</div>
+          <div style=${s('display:flex;align-items:center;gap:12px;font-size:12.5px;color:var(--ink-soft)')}><a onClick=${this.goUpload} style=${s('cursor:pointer')}>+ Add report</a><span style=${s('color:var(--line)')}>|</span><span>${vm.userEmail}</span><a onClick=${this.signOut} style=${s('cursor:pointer')}>Sign out</a></div>
+        </div>
+
+        <header style=${s('margin-bottom:6px')}>
+          <div style=${s('font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);font-weight:600')}>Lab panel · reviewed</div>
+          <div style=${s('display:flex;flex-wrap:wrap;gap:6px 16px;color:var(--ink-soft);font-size:13.5px;margin-top:6px')}><span><b style=${s('color:var(--ink)')}>Ajay Varadharajan</b></span><span>38 · Male</span><span>Collected 10 Jun 2026</span><span>Metropolis / Lister</span></div>
+        </header>
+        ${vm.parseInfo && html`<div style=${s('display:flex;align-items:flex-start;gap:9px;background:var(--good-bg);border:1px solid #CDE7DC;border-radius:12px;padding:11px 14px;margin-top:14px;font-size:12.5px;color:var(--ink)')}><span style=${s('font-size:14px')}>📄</span><span>${vm.parseInfo}</span></div>`}
+
+        <section style=${s('background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:26px 24px;margin:18px 0 26px')}>
+          <h1 style=${s("font-family:'Fraunces',serif;font-weight:500;font-size:clamp(26px,6vw,40px);line-height:1.08;margin:0 0 4px;letter-spacing:-.01em")}>Mostly clear.<br/><em style=${s('font-style:italic;color:var(--teal)')}>Two</em> things worth acting on.</h1>
+          <p style=${s('margin:10px 0 0;color:var(--ink-soft);font-size:14.5px;max-width:56ch')}>Your whole panel in plain language. On each track, grey is outside the healthy zone and the green band is where you want to be — the dot with the white ring is you.</p>
+          <div style=${s('display:flex;flex-wrap:wrap;gap:10px 18px;margin-top:20px;padding-top:18px;border-top:1px solid var(--line-soft)')}>
+            <span style=${s('display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-soft)')}><span style=${s('width:26px;height:11px;border-radius:4px;background:var(--zone)')}></span>outside range</span>
+            <span style=${s('display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-soft)')}><span style=${s('width:26px;height:11px;border-radius:4px;background:var(--good-band);border:1px solid var(--good-band-line)')}></span>healthy zone</span>
+            <span style=${s('display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-soft)')}><span style=${s('width:14px;height:14px;border-radius:50%;background:var(--ink);border:2.5px solid #fff;box-shadow:0 0 0 1px rgba(20,48,42,.4)')}></span>your result</span>
+          </div>
+        </section>
+
+        <!-- progress over time -->
+        <div style=${s('display:flex;align-items:baseline;gap:12px;margin:34px 0 8px')}><h2 style=${s("font-family:'Fraunces',serif;font-weight:500;font-size:21px;margin:0;letter-spacing:-.01em")}>Your progress on your key indicators</h2><span style=${s('flex:1;height:1px;background:var(--line)')}></span></div>
+        <p style=${s('color:var(--ink-soft);font-size:13.5px;margin:0 0 14px')}>How your key markers have moved across ${vm.reportCount} reports.</p>
+        <div style=${s('display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px')}>
+          ${vm.trends.map((t, i) => html`
+            <div key=${i} style=${s('background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:15px 16px')}>
+              <div style=${s('display:flex;align-items:center;justify-content:space-between')}><span style=${s('font-weight:600;font-size:14px')}>${t.name}</span><span style=${s(`font-size:12px;font-weight:600;color:${t.dirColor}`)}>${t.deltaLabel}</span></div>
+              <svg viewBox="0 0 260 72" style=${s('width:100%;height:64px;margin-top:8px;overflow:visible')}>
+                <polyline points=${t.poly} fill="none" stroke=${t.dirColor} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"></polyline>
+                ${t.dots.map((d, j) => html`<circle key=${j} cx=${d.x} cy=${d.y} r="3.5" fill=${d.fill} stroke="#fff" strokeWidth="1.5"></circle>`)}
+              </svg>
+              <div style=${s("display:flex;justify-content:space-between;font-size:10.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px")}><span>${t.firstDate}</span><span>${t.lastDate}</span></div>
+              <div style=${s('font-size:12.5px;color:var(--ink-soft);margin-top:9px')}>${t.takeaway}</div>
+            </div>`)}
+        </div>
+
+        <!-- needs attention (paywalled) -->
+        <div style=${s('display:flex;align-items:baseline;gap:12px;margin:34px 0 8px')}><h2 style=${s("font-family:'Fraunces',serif;font-weight:500;font-size:21px;margin:0;letter-spacing:-.01em")}>Needs your attention</h2><span style=${s('flex:1;height:1px;background:var(--line)')}></span></div>
+        <p style=${s('color:var(--ink-soft);font-size:13.5px;margin:0 0 14px')}>Two results to act on, plus a few just grazing a line.</p>
+        <div style=${s('position:relative')}>
+          <div>
+            ${vm.attn.map((d, i) => html`
+              <div key=${i} style=${s(`background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:9px;border-left:4px solid ${d.col}`)}>
+                <div style=${s('display:flex;align-items:center;justify-content:space-between;gap:10px')}>
+                  <span style=${s('font-weight:600;font-size:14.5px;display:flex;align-items:center;gap:8px')}><span style=${s(`width:9px;height:9px;border-radius:50%;background:${d.col};flex-shrink:0`)}></span>${d.name}</span>
+                  <span style=${s(`font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:500;white-space:nowrap;color:${d.col};filter:${d.valFilter}`)}>${d.valDisplay}<span style=${s("font-size:10.5px;color:var(--ink-soft);margin-left:2px;font-family:'Inter',sans-serif")}>${d.unit}</span></span>
+                </div>
+                ${this.renderBar(d)}
+                <div style=${s('font-size:12.5px;color:var(--ink-soft);margin-top:7px')}>${d.reason}</div>
+              </div>`)}
+          </div>
+          ${vm.locked && html`
+            <div style=${s('display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;background:var(--good-bg);border:1px solid #CDE7DC;border-radius:12px;padding:14px 16px;margin-top:4px')}>
+              <div style=${s('display:flex;align-items:center;gap:10px')}><span style=${s('font-size:16px')}>🔒</span><span style=${s('font-size:13.5px;color:var(--ink)')}>You're outside the healthy range on these — <b>unlock to see exactly how far</b>.</span></div>
+              <button className="h-teal" onClick=${this.openPaywall} style=${s('padding:10px 20px;border:none;border-radius:11px;background:var(--teal);color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap')}>Unlock full results</button>
+            </div>`}
+        </div>
+
+        <!-- action plan (paywalled) -->
+        <div style=${s('display:flex;align-items:baseline;gap:12px;margin:34px 0 8px')}><h2 style=${s("font-family:'Fraunces',serif;font-weight:500;font-size:21px;margin:0;letter-spacing:-.01em")}>Your action plan</h2><span style=${s('flex:1;height:1px;background:var(--line)')}></span></div>
+        <p style=${s('color:var(--ink-soft);font-size:13.5px;margin:0 0 14px')}>Ordered by what matters most — start at the top.</p>
+        ${vm.unlocked && html`
+          <button className="h-cal" onClick=${this.sendToCalendar} style=${s(`display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border:1px solid var(--line);border-radius:11px;background:var(--surface);color:${vm.calBtnColor};font-size:13.5px;font-weight:600;cursor:pointer;margin-bottom:14px`)}>📅 ${vm.calBtnLabel}</button>`}
+        <div style=${s('position:relative')}>
+          <div>
+            <div style=${s('background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:6px 20px 8px')}>
+              ${vm.plan.map((sp, i) => html`
+                <div key=${i} style=${s('padding:20px 0;border-top:1px solid var(--line-soft)')}>
+                  <div style=${s('display:flex;align-items:center;gap:12px')}>
+                    <div style=${s(`font-family:'Fraunces',serif;font-size:15px;font-weight:600;color:#fff;width:28px;height:28px;border-radius:8px;display:grid;place-items:center;flex-shrink:0;background:${sp.rankColor}`)}>${sp.rank}</div>
+                    <div><div style=${s(`font-weight:600;font-size:15.5px;filter:${vm.planItemFilter}`)}>${sp.title}</div><div style=${s('font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);margin-top:1px')}>${sp.tag}</div></div>
+                  </div>
+                  <ul style=${s(`margin:12px 0 0;padding-left:0;list-style:none;filter:${vm.planItemFilter}`)}>
+                    ${sp.items.map((li, j) => html`<li key=${j} style=${s('position:relative;padding-left:20px;margin-bottom:8px;font-size:14px;color:var(--ink-soft)')}><span style=${s('position:absolute;left:2px;top:9px;width:5px;height:5px;border-radius:50%;background:var(--teal)')}></span>${li}</li>`)}
+                  </ul>
+                </div>`)}
+            </div>
+          </div>
+          ${vm.locked && html`
+            <div style=${s('display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;background:var(--good-bg);border:1px solid #CDE7DC;border-radius:12px;padding:14px 16px;margin-top:10px')}>
+              <div style=${s('display:flex;align-items:center;gap:10px')}><span style=${s('font-size:16px')}>🔒</span><span style=${s('font-size:13.5px;color:var(--ink)')}>Your ranked next steps are ready — <b>unlock your full action plan</b>.</span></div>
+              <button className="h-teal" onClick=${this.openPaywall} style=${s('padding:10px 20px;border:none;border-radius:11px;background:var(--teal);color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap')}>Unlock action plan</button>
+            </div>`}
+        </div>
+
+        <!-- everything by system -->
+        <div style=${s('display:flex;align-items:baseline;gap:12px;margin:34px 0 8px')}><h2 style=${s("font-family:'Fraunces',serif;font-weight:500;font-size:21px;margin:0;letter-spacing:-.01em")}>Everything, by system</h2><span style=${s('flex:1;height:1px;background:var(--line)')}></span></div>
+        <p style=${s('color:var(--ink-soft);font-size:13.5px;margin:0 0 14px')}>Tap any system to open it. Each metric says what it measures in one line.</p>
+        ${vm.panels.map((p, i) => html`
+          <details key=${i} className="panel" open=${p.open} style=${s('background:var(--surface);border:1px solid var(--line);border-radius:14px;margin-bottom:12px;overflow:hidden')}>
+            <summary style=${s('cursor:pointer;padding:16px 18px;display:flex;align-items:center;gap:13px;user-select:none')}>
+              <span style=${s(`width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-size:19px;flex-shrink:0;background:${p.badgeBg}`)}>${p.icon}</span>
+              <span><span style=${s('font-weight:600;font-size:15px;line-height:1.2;display:block')}>${p.name}</span><span style=${s('font-size:12.5px;color:var(--ink-soft)')}>${p.intro}</span></span>
+              <span style=${s(`margin-left:auto;font-size:12px;padding:4px 9px;border-radius:999px;white-space:nowrap;font-weight:500;background:${p.countBg};color:${p.countColor}`)}>${p.flagLabel}</span>
+              <span className="caret" style=${s('color:var(--ink-faint);font-size:12px;margin-left:10px')}>▸</span>
+            </summary>
+            <div style=${s('padding:2px 18px 10px')}>
+              ${p.metrics.map((m, j) => html`
+                <div key=${j} style=${s('padding:15px 0;border-top:1px solid var(--line-soft)')}>
+                  <div style=${s('display:flex;justify-content:space-between;align-items:baseline;gap:12px')}>
+                    <span style=${s('font-size:14.5px;font-weight:600')}>${m.name}</span>
+                    <span style=${s(`font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:500;text-align:right;white-space:nowrap;color:${m.valColor};filter:${m.valFilter}`)}>${m.valDisplay}<span style=${s("font-size:10.5px;color:var(--ink-soft);margin-left:2px;font-family:'Inter',sans-serif")}>${m.unit}</span></span>
+                  </div>
+                  <div style=${s('font-size:12.5px;color:var(--ink-soft);margin-top:3px;max-width:52ch')}>${m.what}</div>
+                  ${m.showBar && html`
+                    <div style=${s('margin-top:9px')}>
+                      <div style=${s('position:relative;height:14px;border-radius:7px;background:var(--zone);overflow:hidden')}>
+                        <div style=${s(`position:absolute;top:0;bottom:0;left:${m.gL}%;width:${m.gW}%;background:var(--good-band);box-shadow:inset 0 0 0 1px var(--good-band-line)`)}></div>
+                        <div style=${s(`position:absolute;top:50%;left:${m.mark}%;width:15px;height:15px;border-radius:50%;transform:translate(-50%,-50%);border:2.5px solid #fff;box-shadow:0 0 0 1.5px rgba(20,48,42,.45),0 1px 3px rgba(0,0,0,.3);background:${m.col};filter:${m.dotFilter}`)}></div>
+                      </div>
+                      <div style=${s("display:flex;justify-content:space-between;font-size:11px;color:var(--ink-faint);margin-top:7px;font-family:'IBM Plex Mono',monospace")}><span>${m.loLab}</span><span style=${s("color:#1b6b52;font-family:'Inter',sans-serif")}>${m.midLab}</span><span>${m.hiLab}</span></div>
+                      <span style=${s('font-size:12.5px;margin-top:8px;display:inline-flex;align-items:center;gap:6px')}><span style=${s(`width:9px;height:9px;border-radius:50%;background:${m.col}`)}></span>You: <b style=${s(`color:${m.col};font-weight:600;filter:${m.valFilter}`)}>${m.valDisplay} ${m.unit}</b> · ${m.word}</span>
+                    </div>`}
+                </div>`)}
+            </div>
+          </details>`)}
+
+        <div style=${s('margin-top:26px;padding:16px 18px;border:1px dashed var(--line);border-radius:12px;font-size:12.5px;color:var(--ink-soft)')}>This dashboard translates the numbers in your Metropolis report against the lab's own reference ranges. It's for understanding your results, not a diagnosis or a replacement for your doctor. Confirm any supplement dose and the raised IgE follow-up with a physician who knows your history.</div>
+        <div style=${s('text-align:center;margin-top:28px;font-size:12px;color:var(--ink-faint)')}>Built from report VID 260216519200233 · 28 pages</div>
+      </div>`;
+  }
+
+  renderPaywall(vm){
+    return html`
+      <div style=${s('position:fixed;inset:0;background:rgba(20,48,42,.45);display:grid;place-items:center;padding:20px;z-index:50')} onClick=${this.closePaywall}>
+        <div onClick=${this.stop} style=${s('width:100%;max-width:400px;background:var(--surface);border-radius:20px;padding:30px 28px;animation:fadeUp .3s ease both;box-shadow:0 24px 60px rgba(0,0,0,.25)')}>
+          <div style=${s('width:46px;height:46px;border-radius:12px;background:var(--good-bg);display:grid;place-items:center;font-size:22px;margin-bottom:16px')}>🔓</div>
+          <h2 style=${s("font-family:'Fraunces',serif;font-weight:500;font-size:24px;margin:0 0 6px;letter-spacing:-.01em")}>Unlock your full results</h2>
+          <p style=${s('margin:0 0 18px;color:var(--ink-soft);font-size:14px')}>See every out-of-range value, your complete action plan, and unlimited report tracking.</p>
+          <div style=${s('display:flex;align-items:baseline;gap:6px;margin-bottom:18px')}><span style=${s("font-family:'Fraunces',serif;font-size:34px;font-weight:600")}>₹99</span><span style=${s('color:var(--ink-soft);font-size:14px')}>one-time</span></div>
+          <div style=${s('display:flex;flex-direction:column;gap:9px;margin-bottom:20px')}>
+            <span style=${s('font-size:13.5px;color:var(--ink-soft);display:flex;gap:8px')}><span style=${s('color:var(--good)')}>✓</span>All flagged results revealed</span>
+            <span style=${s('font-size:13.5px;color:var(--ink-soft);display:flex;gap:8px')}><span style=${s('color:var(--good)')}>✓</span>Full step-by-step action plan</span>
+            <span style=${s('font-size:13.5px;color:var(--ink-soft);display:flex;gap:8px')}><span style=${s('color:var(--good)')}>✓</span>Progress tracking across every report</span>
+          </div>
+          <button className="h-pay" onClick=${this.payNow} style=${s(`width:100%;padding:14px;border:none;border-radius:12px;background:${vm.payBtnBg};color:#fff;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px`)}>
+            ${vm.paying && html`<span style=${s('width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;display:inline-block;animation:spin .7s linear infinite')}></span>`}
+            ${vm.payBtnLabel}
+          </button>
+          <div style=${s('text-align:center;margin-top:12px;font-size:11.5px;color:var(--ink-faint)')}>🔒 Secured by Stripe${vm.stripeKeyNote}</div>
+          <div style=${s('text-align:center;margin-top:8px')}><a onClick=${this.closePaywall} style=${s('cursor:pointer;font-size:12.5px;color:var(--ink-faint)')}>Maybe later</a></div>
+        </div>
+      </div>`;
+  }
+
+  renderConfig(vm){
+    return html`
+      <div style=${s('position:fixed;inset:0;background:rgba(20,48,42,.45);display:grid;place-items:center;padding:20px;z-index:50')} onClick=${this.closeConfig}>
+        <div onClick=${this.stop} style=${s('width:100%;max-width:440px;background:var(--surface);border-radius:20px;padding:28px;animation:fadeUp .3s ease both')}>
+          <h2 style=${s("font-family:'Fraunces',serif;font-weight:500;font-size:22px;margin:0 0 4px")}>Connect your keys</h2>
+          <p style=${s('margin:0 0 18px;color:var(--ink-soft);font-size:13.5px')}>Stored only in this browser. Google needs this preview URL added as an authorized origin.</p>
+          <label style=${s('display:block;font-size:12.5px;color:var(--ink-soft);margin-bottom:6px')}>Google OAuth Client ID</label>
+          <input value=${vm.googleClientId} onChange=${this.onGoogleId} placeholder="xxxx.apps.googleusercontent.com" style=${s("width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;font-size:13.5px;font-family:'IBM Plex Mono',monospace;margin-bottom:14px;background:#FbFdFc")} />
+          <label style=${s('display:block;font-size:12.5px;color:var(--ink-soft);margin-bottom:6px')}>Stripe Publishable Key</label>
+          <input value=${vm.stripePk} onChange=${this.onStripePk} placeholder="pk_live_..." style=${s("width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;font-size:13.5px;font-family:'IBM Plex Mono',monospace;margin-bottom:18px;background:#FbFdFc")} />
+          <button className="h-teal" onClick=${this.saveConfig} style=${s('width:100%;padding:12px;border:none;border-radius:11px;background:var(--teal);color:#fff;font-size:14px;font-weight:600;cursor:pointer')}>Save keys</button>
+        </div>
+      </div>`;
+  }
+
+  render(){
+    const vm = this.vm();
+    return html`
+      <div style=${s('min-height:100vh')}>
+        ${vm.isSignin && this.renderSignin(vm)}
+        ${vm.isUpload && this.renderUpload(vm)}
+        ${vm.isDashboard && this.renderDashboard(vm)}
+        ${vm.showPaywall && this.renderPaywall(vm)}
+        ${vm.showConfig && this.renderConfig(vm)}
+      </div>`;
+  }
+
+  data(){ return [
+    {panel:'Diabetes & metabolism',name:'HbA1c',val:5.6,unit:'%',low:0,high:5.6,type:'max',status:'watch',what:'Your average blood sugar over the last ~3 months — the best early diabetes signal.'},
+    {panel:'Diabetes & metabolism',name:'Fasting glucose',val:89,unit:'mg/dL',low:70,high:99,type:'range',status:'good',what:'Blood sugar after an overnight fast.'},
+    {panel:'Diabetes & metabolism',name:'Post-prandial glucose',val:78,unit:'mg/dL',low:0,high:140,type:'max',status:'good',what:'Blood sugar after a meal — shows how well you clear sugar.'},
+    {panel:'Diabetes & metabolism',name:'Fasting insulin',val:6.16,unit:'µIU/mL',low:2,high:25,type:'range',status:'good',what:'How hard your body works to keep sugar in check.'},
+    {panel:'Cholesterol & heart risk',name:'LDL cholesterol',val:113.7,unit:'mg/dL',low:0,high:100,type:'max',status:'watch',what:'The "bad" cholesterol that builds up in artery walls. Lower is better.'},
+    {panel:'Cholesterol & heart risk',name:'Non-HDL cholesterol',val:131.1,unit:'mg/dL',low:0,high:130,type:'max',status:'watch',what:'All the harmful cholesterol combined — a fuller heart-risk number than LDL alone.'},
+    {panel:'Cholesterol & heart risk',name:'Total cholesterol',val:193,unit:'mg/dL',low:0,high:200,type:'max',status:'good',what:'All cholesterol in your blood added together.'},
+    {panel:'Cholesterol & heart risk',name:'HDL cholesterol',val:61.9,unit:'mg/dL',low:40,high:90,type:'min',status:'good',what:'The "good" cholesterol that clears the bad kind away. Higher is better.'},
+    {panel:'Cholesterol & heart risk',name:'Triglycerides',val:87,unit:'mg/dL',low:0,high:150,type:'max',status:'good',what:'Fat in your blood from food and spare calories.'},
+    {panel:'Cholesterol & heart risk',name:'Apolipoprotein B',val:86,unit:'mg/dL',low:66,high:133,type:'range',status:'good',what:'Counts the actual harmful cholesterol particles — a precise risk marker.'},
+    {panel:'Cholesterol & heart risk',name:'Lipoprotein(a)',val:7,unit:'mg/dL',low:0,high:30,type:'max',status:'good',what:'A genetic cholesterol type that raises clot risk if high.'},
+    {panel:'Cholesterol & heart risk',name:'hsCRP',val:0.29,unit:'mg/L',low:0,high:1.0,type:'max',status:'good',what:'A sensitive inflammation marker tied to future heart trouble.'},
+    {panel:'Cholesterol & heart risk',name:'Homocysteine',val:11.61,unit:'µmol/L',low:0,high:15,type:'max',status:'good',what:'An amino acid linked to heart and vessel risk when high.'},
+    {panel:'Vitamins & iron',name:'Vitamin D',val:13.86,unit:'ng/mL',low:30,high:100,type:'min',status:'out',what:'Runs your bones, muscles and immune system. Low is very common and easy to fix.'},
+    {panel:'Vitamins & iron',name:'Vitamin B12',val:321.1,unit:'pg/mL',low:187,high:883,type:'range',status:'good',what:'Needed for healthy nerves and red blood cells.'},
+    {panel:'Vitamins & iron',name:'Folic acid',val:7.20,unit:'ng/mL',low:3.1,high:20.5,type:'range',status:'good',what:'A B-vitamin for making blood cells and DNA.'},
+    {panel:'Vitamins & iron',name:'Ferritin',val:89.4,unit:'ng/mL',low:21.8,high:274.7,type:'range',status:'good',what:'Your iron storage — shows if reserves are full or empty.'},
+    {panel:'Vitamins & iron',name:'Serum iron',val:107.1,unit:'µg/dL',low:33,high:193,type:'range',status:'good',what:'Iron currently circulating in your blood.'},
+    {panel:'Vitamins & iron',name:'TIBC',val:240,unit:'µg/dL',low:250,high:450,type:'range',status:'watch',what:'Your blood’s spare capacity to carry iron. Rises when iron runs low.'},
+    {panel:'Vitamins & iron',name:'Transferrin saturation',val:45,unit:'%',low:14,high:50,type:'range',status:'good',what:'The percent of your iron-carrying capacity that’s actually filled.'},
+    {panel:'Allergy & immune',name:'IgE total',val:877,unit:'IU/mL',low:0,high:100,type:'max',status:'out',what:'An antibody that spikes with allergies and some infections.'},
+    {panel:'Thyroid',name:'TSH',val:2.19,unit:'µIU/mL',low:0.54,high:5.3,type:'range',status:'good',what:'The brain’s signal telling your thyroid to speed up or slow down — the main check.'},
+    {panel:'Thyroid',name:'Free T3',val:3.12,unit:'pg/mL',low:2.0,high:4.4,type:'range',status:'good',what:'The active thyroid hormone that drives your metabolism.'},
+    {panel:'Thyroid',name:'Free T4',val:1.35,unit:'ng/dL',low:0.93,high:1.7,type:'range',status:'good',what:'The thyroid hormone your body converts into the active form.'},
+    {panel:'Liver',name:'SGPT (ALT)',val:17,unit:'U/L',low:0,high:45,type:'max',status:'good',what:'An enzyme that leaks out when liver cells are stressed.'},
+    {panel:'Liver',name:'SGOT (AST)',val:15,unit:'U/L',low:0,high:35,type:'max',status:'good',what:'Another liver-stress enzyme, checked alongside ALT.'},
+    {panel:'Liver',name:'Bilirubin total',val:0.97,unit:'mg/dL',low:0.2,high:1.2,type:'range',status:'good',what:'Waste from old red blood cells; high can tinge skin/eyes yellow.'},
+    {panel:'Liver',name:'Bilirubin direct',val:0.31,unit:'mg/dL',low:0,high:0.30,type:'max',status:'watch',what:'The already-processed portion of that waste product.'},
+    {panel:'Liver',name:'Alkaline phosphatase',val:62,unit:'U/L',low:40,high:130,type:'range',status:'good',what:'An enzyme from your liver and bones.'},
+    {panel:'Liver',name:'GGT',val:9,unit:'U/L',low:8,high:61,type:'range',status:'good',what:'A liver enzyme sensitive to alcohol and bile flow.'},
+    {panel:'Liver',name:'Total protein',val:6.5,unit:'gm/dL',low:6.4,high:8.3,type:'range',status:'good',what:'Total protein in your blood — reflects nutrition and liver health.'},
+    {panel:'Liver',name:'Albumin',val:4.1,unit:'gm/dL',low:3.5,high:5.2,type:'range',status:'good',what:'The main protein your liver makes.'},
+    {panel:'Kidney',name:'Creatinine',val:0.87,unit:'mg/dL',low:0.70,high:1.20,type:'range',status:'good',what:'A muscle waste product kidneys filter out. Rises if they slow.'},
+    {panel:'Kidney',name:'eGFR',val:113,unit:'ml/min',low:90,high:130,type:'min',status:'good',what:'An estimate of your kidney filtering rate. Higher is better.'},
+    {panel:'Kidney',name:'Urea nitrogen (BUN)',val:12.4,unit:'mg/dL',low:6,high:20,type:'range',status:'good',what:'A waste product reflecting kidney filtering and hydration.'},
+    {panel:'Kidney',name:'Uric acid',val:5.3,unit:'mg/dL',low:3.4,high:7.0,type:'range',status:'good',what:'A waste product that can cause gout when high.'},
+    {panel:'Kidney',name:'Urine albumin/creatinine',val:2.38,unit:'µg/mg',low:0,high:30,type:'max',status:'good',what:'Checks for tiny protein leaks — an early sign of kidney strain.'},
+    {panel:'Blood count',name:'Haemoglobin',val:15.0,unit:'gm/dL',low:13.5,high:18,type:'range',status:'good',what:'The oxygen-carrying protein in red blood cells.'},
+    {panel:'Blood count',name:'RBC count',val:5.1,unit:'mill',low:4.7,high:6.0,type:'range',status:'good',what:'How many red (oxygen-carrying) cells you have.'},
+    {panel:'Blood count',name:'WBC count',val:5420,unit:'/cu.mm',low:4000,high:10500,type:'range',status:'good',what:'Your infection-fighting white blood cells.'},
+    {panel:'Blood count',name:'Platelets',val:210,unit:'×10³',low:150,high:450,type:'range',status:'good',what:'The cells that clot blood and stop bleeding.'},
+    {panel:'Blood count',name:'MPV',val:10.8,unit:'fL',low:6,high:9.5,type:'range',status:'watch',what:'The average size of your platelets.'},
+    {panel:'Blood count',name:'MCV',val:88.5,unit:'fL',low:78,high:100,type:'range',status:'good',what:'The average size of your red blood cells.'},
+    {panel:'Blood count',name:'ESR',val:3,unit:'mm/hr',low:0,high:15,type:'max',status:'good',what:'A general, non-specific inflammation marker.'},
+    {panel:'Minerals & electrolytes',name:'Calcium',val:9.4,unit:'mg/dL',low:8.6,high:10.0,type:'range',status:'good',what:'For bones, nerves and muscle function.'},
+    {panel:'Minerals & electrolytes',name:'Magnesium',val:2.3,unit:'mg/dL',low:1.6,high:2.6,type:'range',status:'good',what:'For muscles, nerves and steady energy.'},
+    {panel:'Minerals & electrolytes',name:'Phosphorus',val:3.0,unit:'mg/dL',low:2.5,high:4.5,type:'range',status:'good',what:'Works with calcium for bones and energy.'},
+    {panel:'Minerals & electrolytes',name:'Sodium',val:142,unit:'mmol/L',low:136,high:145,type:'range',status:'good',what:'A salt that balances your body fluids.'},
+    {panel:'Minerals & electrolytes',name:'Potassium',val:4.56,unit:'mmol/L',low:3.5,high:5.1,type:'range',status:'good',what:'A salt vital for nerves and a steady heartbeat.'},
+    {panel:'Minerals & electrolytes',name:'Chloride',val:104.9,unit:'mmol/L',low:98,high:107,type:'range',status:'good',what:'A salt that helps balance fluids and acidity.'},
+    {panel:'Minerals & electrolytes',name:'Bicarbonate',val:26.6,unit:'mmol/L',low:22,high:29,type:'range',status:'good',what:'Keeps your blood’s acid balance steady.'},
+    {panel:'Screening markers',name:'Total PSA',val:0.719,unit:'ng/mL',low:0,high:4,type:'max',status:'good',what:'A prostate marker used to screen for prostate problems.'},
+    {panel:'Screening markers',name:'CEA',val:2.78,unit:'ng/mL',low:0,high:5.0,type:'max',status:'good',what:'A broad tumour marker used to monitor certain cancers.'},
+    {panel:'Screening markers',name:'Amylase',val:67,unit:'U/L',low:25,high:125,type:'range',status:'good',what:'A pancreas enzyme; flags pancreas inflammation.'},
+    {panel:'Screening markers',name:'Lipase',val:29.2,unit:'U/L',low:13,high:60,type:'range',status:'good',what:'A second pancreas enzyme, checked with amylase.'},
+    {panel:'Screening markers',name:'Cortisol (8am)',val:7.90,unit:'µg/dL',low:3.7,high:19.4,type:'range',status:'good',what:'Your stress hormone, naturally highest in the morning.'},
+    {panel:'Screening markers',name:'RA factor',val:10,unit:'IU/mL',low:0,high:14,type:'max',status:'good',what:'An antibody linked to rheumatoid arthritis.'},
+    {panel:'Screening markers',name:'HCV antibody',val:'Non-reactive',cat:true,status:'good',what:'Screens for hepatitis C infection.'},
+    {panel:'Screening markers',name:'HBsAg',val:'Non-reactive',cat:true,status:'good',what:'Screens for hepatitis B infection.'},
+    {panel:'Screening markers',name:'Urine routine',val:'Normal',cat:true,status:'good',what:'A general check of urine for infection, sugar, protein and blood.'},
+  ]; }
+}
+
+createRoot(document.getElementById('root')).render(html`<${App} />`);
+</script>
+</body>
+</html>
