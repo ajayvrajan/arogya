@@ -145,7 +145,19 @@ const html = htm.bind(React.createElement);
 
 // ---- Live integration config (all public-safe values; never put a Stripe SECRET key here) ----
 const GOOGLE_CLIENT_ID = '1087731665818-0cjd9u6q3soi16c7g602gpnea6vhj9b0.apps.googleusercontent.com';
-const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/test_14A4gz4W0gN92LeeUj9bO04'; // TEST mode link — swap for the Live link before real launch
+const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/eVq00j3RW54rgC48vV9bO02'; // LIVE mode — clicking "Pay ₹99" now takes real money
+const GA_MEASUREMENT_ID = '';       // optional GA4 id like G-XXXXXXXXXX — for a real cross-user click count
+
+// Load Google Analytics (GA4) only if configured, so we can count feature interest cross-user.
+if(GA_MEASUREMENT_ID){
+  const gsc = document.createElement('script');
+  gsc.async = true; gsc.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_MEASUREMENT_ID;
+  document.head.appendChild(gsc);
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = function(){ window.dataLayer.push(arguments); };
+  window.gtag('js', new Date());
+  window.gtag('config', GA_MEASUREMENT_ID);
+}
 
 // Parse an inline CSS string into a React style object so the design's
 // original inline styles can be carried over almost verbatim.
@@ -426,28 +438,16 @@ class App extends React.Component {
         templateUrl:'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(summary)+'&details='+encodeURIComponent(description)+'&dates='+compact(start)+'/'+compact(end)};
     });
   }
-  sendToCalendar = () => {
-    if(this.state.calStatus === 'working') return;
-    const tasks = this.calendarTasks();
-    const id = this.state.googleClientId;
-    const g = window.google;
-    if(id && g && g.accounts && g.accounts.oauth2){
-      this.setState({calStatus:'working'});
-      try{
-        const tc = g.accounts.oauth2.initTokenClient({
-          client_id: id,
-          scope: 'https://www.googleapis.com/auth/calendar.events',
-          callback: async (tok) => {
-            if(!tok || !tok.access_token){ this.calFallback(tasks); return; }
-            try{ for(const t of tasks){ await this.insertEvent(tok.access_token, t); } this.setState({calStatus:'done'}); }
-            catch(e){ this.calFallback(tasks); }
-          },
-        });
-        tc.requestAccessToken();
-      }catch(e){ this.calFallback(tasks); }
-    } else {
-      this.calFallback(tasks);
-    }
+  // Calendar export is turned OFF for now. We keep the button to gauge demand and record
+  // every click: a per-device tally in localStorage + a GA4 event (cross-user) if configured.
+  trackCalendarInterest = () => {
+    if(this.state.calStatus === 'noted') return;
+    try{
+      const n = (parseInt(localStorage.getItem('bp_cal_clicks') || '0', 10) || 0) + 1;
+      localStorage.setItem('bp_cal_clicks', String(n));
+    }catch(e){}
+    try{ if(window.gtag) window.gtag('event', 'calendar_export_interest', {event_category:'engagement'}); }catch(e){}
+    this.setState({calStatus:'noted'});
   }
   insertEvent(token, t){
     const tz = (Intl.DateTimeFormat().resolvedOptions().timeZone) || 'UTC';
@@ -619,8 +619,8 @@ class App extends React.Component {
       trends: this.buildTrends(),
       attn, plan, panels,
       locked, planItemFilter: locked ? 'blur(5px)' : 'none', unlocked: !locked,
-      calBtnLabel: ({idle:'Send tasks to Google Calendar', working:'Adding to Google Calendar…', done:'Added to your Google Calendar ✓', error:'Couldn’t add — tap to retry'})[st.calStatus] || 'Send tasks to Google Calendar',
-      calBtnColor: st.calStatus==='done' ? 'var(--good)' : 'var(--teal)',
+      calBtnLabel: st.calStatus==='noted' ? 'Coming soon — thanks, we’ve noted your interest ✓' : 'Send action-plan tasks to Google Calendar',
+      calBtnColor: st.calStatus==='noted' ? 'var(--good)' : 'var(--teal)',
       showPaywall: st.showPaywall, paying: st.paying,
       payBtnBg: st.paying ? '#0a5e51' : 'var(--teal)',
       payBtnLabel: st.paying ? 'Processing…' : 'Pay ₹99 and unlock',
@@ -774,7 +774,7 @@ class App extends React.Component {
         <div style=${s('display:flex;align-items:baseline;gap:12px;margin:34px 0 8px')}><h2 style=${s("font-family:'Fraunces',serif;font-weight:500;font-size:21px;margin:0;letter-spacing:-.01em")}>Your action plan</h2><span style=${s('flex:1;height:1px;background:var(--line)')}></span></div>
         <p style=${s('color:var(--ink-soft);font-size:13.5px;margin:0 0 14px')}>Ordered by what matters most — start at the top.</p>
         ${vm.unlocked && html`
-          <button className="h-cal" onClick=${this.sendToCalendar} style=${s(`display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border:1px solid var(--line);border-radius:11px;background:var(--surface);color:${vm.calBtnColor};font-size:13.5px;font-weight:600;cursor:pointer;margin-bottom:14px`)}>📅 ${vm.calBtnLabel}</button>`}
+          <button className="h-cal" onClick=${this.trackCalendarInterest} style=${s(`display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border:1px solid var(--line);border-radius:11px;background:var(--surface);color:${vm.calBtnColor};font-size:13.5px;font-weight:600;cursor:pointer;margin-bottom:14px`)}>📅 ${vm.calBtnLabel}</button>`}
         <div style=${s('position:relative')}>
           <div>
             <div style=${s('background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:6px 20px 8px')}>
