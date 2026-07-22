@@ -146,18 +146,9 @@ const html = htm.bind(React.createElement);
 // ---- Live integration config (all public-safe values; never put a Stripe SECRET key here) ----
 const GOOGLE_CLIENT_ID = '1087731665818-0cjd9u6q3soi16c7g602gpnea6vhj9b0.apps.googleusercontent.com';
 const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/eVq00j3RW54rgC48vV9bO02'; // LIVE mode — clicking "Pay ₹99" now takes real money
-const GA_MEASUREMENT_ID = '';       // optional GA4 id like G-XXXXXXXXXX — for a real cross-user click count
-
-// Load Google Analytics (GA4) only if configured, so we can count feature interest cross-user.
-if(GA_MEASUREMENT_ID){
-  const gsc = document.createElement('script');
-  gsc.async = true; gsc.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_MEASUREMENT_ID;
-  document.head.appendChild(gsc);
-  window.dataLayer = window.dataLayer || [];
-  window.gtag = function(){ window.dataLayer.push(arguments); };
-  window.gtag('js', new Date());
-  window.gtag('config', GA_MEASUREMENT_ID);
-}
+// Zero-setup, cross-user click counter (Abacus — no signup). Each /hit increments the count.
+// View the running total any time at the /get URL (see README).
+const CALENDAR_INTEREST_COUNTER = 'https://abacus.jasoncameron.dev/hit/arogya-ajayvrajan/calendar-export-interest';
 
 // Parse an inline CSS string into a React style object so the design's
 // original inline styles can be carried over almost verbatim.
@@ -194,7 +185,7 @@ class App extends React.Component {
       }
     }catch(e){}
     this.state = {
-      screen: user ? 'dashboard' : 'signin',
+      screen: user ? 'upload' : 'signin',   // signed-in users land on upload until they add a report
       user, paid, googleClientId: gid, stripePk: spk,
       email: '', dragOver: false, showPaywall: false, paying: false,
       showConfig: false, calStatus: 'idle',
@@ -205,11 +196,8 @@ class App extends React.Component {
   }
 
   seedReports(){
-    return [
-      {id:'r1', label:'Full metabolic + lipid panel', date:'2025-06-10', source:'sample'},
-      {id:'r2', label:'Follow-up lipid + vitamin panel', date:'2025-12-12', source:'sample'},
-      {id:'r3', label:'Annual comprehensive panel', date:'2026-06-10', source:'sample'},
-    ];
+    // New users start empty — they upload their first report to build a dashboard.
+    return [];
   }
 
   // Real Google sign-in from the branded button. Uses the OAuth token model (same as the
@@ -446,7 +434,7 @@ class App extends React.Component {
       const n = (parseInt(localStorage.getItem('bp_cal_clicks') || '0', 10) || 0) + 1;
       localStorage.setItem('bp_cal_clicks', String(n));
     }catch(e){}
-    try{ if(window.gtag) window.gtag('event', 'calendar_export_interest', {event_category:'engagement'}); }catch(e){}
+    try{ if(CALENDAR_INTEREST_COUNTER) fetch(CALENDAR_INTEREST_COUNTER).catch(()=>{}); }catch(e){}
     this.setState({calStatus:'noted'});
   }
   insertEvent(token, t){
@@ -659,9 +647,6 @@ class App extends React.Component {
               </button>
             </div>
           </div>
-          <div style=${s('text-align:center;margin-top:16px;font-size:12.5px;color:var(--ink-faint)')}>
-            <a onClick=${this.openConfig} style=${s('cursor:pointer;color:var(--ink-faint);text-decoration:underline')}>Connect Google / Stripe keys</a>
-          </div>
         </div>
       </div>`;
   }
@@ -683,8 +668,8 @@ class App extends React.Component {
           <div style=${s('color:var(--ink-soft);font-size:13.5px')}>or click to browse — PDF or image, upload as many as you like</div>
         </label>
         ${vm.parseMsg && html`<div style=${s('margin-top:12px;font-size:12.5px;color:var(--ink-soft);display:flex;align-items:center;gap:8px')}><span style=${s('font-size:14px')}>ℹ️</span>${vm.parseMsg}</div>`}
-        ${vm.hasReports && html`
-          <div style=${s('margin-top:24px')}>
+        <div style=${s('margin-top:24px')}>
+          ${vm.hasReports ? html`
             <div style=${s('font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;margin-bottom:10px')}>${vm.reportCountLabel}</div>
             ${vm.reports.map((r, i) => html`
               <div key=${i} style=${s('display:flex;align-items:center;gap:13px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin-bottom:9px')}>
@@ -692,8 +677,11 @@ class App extends React.Component {
                 <div style=${s('flex:1;min-width:0')}><div style=${s('font-weight:600;font-size:14px')}>${r.label}</div><div style=${s('font-size:12.5px;color:var(--ink-soft)')}>${r.dateLabel}${r.sourceLabel}</div></div>
                 <span style=${s('font-size:11.5px;color:var(--good);font-weight:600')}>✓ ready</span>
               </div>`)}
-            <button className="h-teal" onClick=${this.goDashboard} style=${s('width:100%;margin-top:14px;padding:14px;border:none;border-radius:13px;background:var(--teal);color:#fff;font-size:15px;font-weight:600;cursor:pointer')}>See my dashboard →</button>
-          </div>`}
+          ` : html`
+            <div style=${s('text-align:center;color:var(--ink-faint);font-size:13.5px;padding:10px 8px 2px')}>No reports yet — upload your first report above to build your dashboard.</div>
+          `}
+          <button onClick=${vm.hasReports ? this.goDashboard : undefined} disabled=${!vm.hasReports} className=${vm.hasReports ? 'h-teal' : ''} style=${s('width:100%;margin-top:14px;padding:14px;border:none;border-radius:13px;font-size:15px;font-weight:600;' + (vm.hasReports ? 'background:var(--teal);color:#fff;cursor:pointer' : 'background:var(--line-soft);color:var(--ink-faint);cursor:not-allowed'))}>See my dashboard →</button>
+        </div>
       </div>`;
   }
 
