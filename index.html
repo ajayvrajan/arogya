@@ -170,12 +170,16 @@ function s(css){
 class App extends React.Component {
   constructor(props){
     super(props);
-    let user = null, paid = false, gid = '', spk = '';
+    let user = null, paid = false, gid = '', spk = '', reports = [], parsed = {};
     try{
       user = JSON.parse(localStorage.getItem('bp_user') || 'null');
       paid = localStorage.getItem('bp_paid') === '1';
       gid  = localStorage.getItem('bp_gid') || GOOGLE_CLIENT_ID;
       spk  = localStorage.getItem('bp_spk') || '';
+      // Restore the user's uploaded reports + parsed values so the count (and paywall gating)
+      // survive reloads — the paywall must not be bypassable by refreshing.
+      reports = JSON.parse(localStorage.getItem('bp_reports') || '[]') || [];
+      parsed  = JSON.parse(localStorage.getItem('bp_parsed') || '{}') || {};
       // Returning from a successful Stripe payment? Stripe appends ?session_id=... (or we use ?paid=1).
       const q = new URLSearchParams(location.search);
       if(q.get('paid') === '1' || q.get('session_id')){
@@ -185,19 +189,23 @@ class App extends React.Component {
       }
     }catch(e){}
     this.state = {
-      screen: user ? 'upload' : 'signin',   // signed-in users land on upload until they add a report
+      // Signed-in users with reports go straight to their dashboard; otherwise to the upload screen.
+      screen: user ? (reports.length ? 'dashboard' : 'upload') : 'signin',
       user, paid, googleClientId: gid, stripePk: spk,
       email: '', dragOver: false, showPaywall: false, paying: false,
       showConfig: false, calStatus: 'idle',
-      reports: this.seedReports(),
-      parsed: {},      // { reportId: { markerName: value } } — values parsed from uploaded reports
+      reports,
+      parsed,          // { reportId: { markerName: value } } — values parsed from uploaded reports
       parseMsg: '',    // transient status line shown on the upload screen
     };
   }
 
-  seedReports(){
-    // New users start empty — they upload their first report to build a dashboard.
-    return [];
+  // Persist reports + parsed values so the report count survives reloads.
+  persistReports(){
+    try{
+      localStorage.setItem('bp_reports', JSON.stringify(this.state.reports));
+      localStorage.setItem('bp_parsed', JSON.stringify(this.state.parsed));
+    }catch(e){}
   }
 
   // Real Google sign-in from the branded button. Uses the OAuth token model (same as the
@@ -249,7 +257,7 @@ class App extends React.Component {
       return {file:f, id:'u'+stamp+i, label:f.name.replace(/\.[^.]+$/,''), date:d.toISOString().slice(0,10), source:'upload'};
     });
     // Add the report entries immediately (without the raw File handle).
-    this.setState(st => ({reports:[...st.reports, ...add.map(({file, ...r}) => r)].sort((a,b)=>a.date.localeCompare(b.date))}));
+    this.setState(st => ({reports:[...st.reports, ...add.map(({file, ...r}) => r)].sort((a,b)=>a.date.localeCompare(b.date))}), () => this.persistReports());
     // Parse PDFs in the background; images are listed but not parsed (no OCR).
     for(const r of add){
       if(!/\.pdf$/i.test(r.file.name)){
@@ -261,7 +269,7 @@ class App extends React.Component {
         const text = await this.extractPdfText(r.file);
         const vals = this.parseMarkers(text);
         const n = Object.keys(vals).length;
-        if(n){ this.setState(st => ({parsed:{...st.parsed, [r.id]:vals}, parseMsg:'Read '+n+' markers from '+r.label+'.'})); }
+        if(n){ this.setState(st => ({parsed:{...st.parsed, [r.id]:vals}, parseMsg:'Read '+n+' markers from '+r.label+'.'}), () => this.persistReports()); }
         else { this.setState({parseMsg:'No recognizable markers found in '+r.label+' — showing sample values.'}); }
       }catch(e){ this.setState({parseMsg:'Couldn’t read '+r.label+' — showing sample values.'}); }
     }
@@ -530,7 +538,8 @@ class App extends React.Component {
 
   vm(){
     const st = this.state;
-    const locked = !st.paid;
+    // The first report is fully free. From the 2nd report onward the paywall applies until paid.
+    const locked = !st.paid && st.reports.length >= 2;
     const {rows: data, active, parsedCount} = this.activeData();
     const order =['Vitamins & iron','Allergy & immune','Diabetes & metabolism','Cholesterol & heart risk','Thyroid','Liver','Kidney','Blood count','Minerals & electrolytes','Screening markers'];
     const pm = {
