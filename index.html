@@ -143,6 +143,10 @@ import * as pdfjsLib from 'https://esm.sh/pdfjs-dist@4.4.168/build/pdf.min.mjs';
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://esm.sh/pdfjs-dist@4.4.168/build/pdf.worker.min.mjs';
 const html = htm.bind(React.createElement);
 
+// ---- Live integration config (all public-safe values; never put a Stripe SECRET key here) ----
+const GOOGLE_CLIENT_ID = '';        // paste the OAuth Web Client ID ending in .apps.googleusercontent.com
+const STRIPE_PAYMENT_LINK = '';     // paste the Stripe ₹99 Payment Link, e.g. https://buy.stripe.com/xxxxxxxx
+
 // Parse an inline CSS string into a React style object so the design's
 // original inline styles can be carried over almost verbatim.
 function s(css){
@@ -167,8 +171,15 @@ class App extends React.Component {
     try{
       user = JSON.parse(localStorage.getItem('bp_user') || 'null');
       paid = localStorage.getItem('bp_paid') === '1';
-      gid  = localStorage.getItem('bp_gid') || '';
+      gid  = localStorage.getItem('bp_gid') || GOOGLE_CLIENT_ID;
       spk  = localStorage.getItem('bp_spk') || '';
+      // Returning from a successful Stripe payment? Stripe appends ?session_id=... (or we use ?paid=1).
+      const q = new URLSearchParams(location.search);
+      if(q.get('paid') === '1' || q.get('session_id')){
+        paid = true;
+        localStorage.setItem('bp_paid', '1');
+        history.replaceState({}, '', location.pathname); // clean the URL so a refresh doesn't re-trigger
+      }
     }catch(e){}
     this.gbtn = React.createRef();
     this.state = {
@@ -372,6 +383,13 @@ class App extends React.Component {
   payNow = () => {
     if(this.state.paying) return;
     this.setState({paying:true});
+    if(STRIPE_PAYMENT_LINK){
+      // Real payment: hand off to Stripe-hosted checkout. On success Stripe redirects back
+      // to the app's success URL, and the constructor unlocks from the returned session param.
+      window.location.href = STRIPE_PAYMENT_LINK;
+      return;
+    }
+    // Demo fallback (no Payment Link configured yet): simulate an unlock.
     setTimeout(() => { try{localStorage.setItem('bp_paid','1');}catch(e){}; this.setState({paid:true, paying:false, showPaywall:false}); }, 1400);
   }
 
